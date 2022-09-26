@@ -1,0 +1,33 @@
+{
+    parserClass="com.plugin.dte.parser.DteParser"
+
+    extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+    psiClassPrefix="Dte"
+    psiImplClassSuffix="Impl"
+    psiPackage="com.plugin.dte.psi"
+    psiImplPackage="com.plugin.dte.psi.impl"
+
+    elementTypeHolderClass="com.plugin.dte.psi.DteTypes"
+    elementTypeClass="com.plugin.dte.psi.DteElementType"
+    tokenTypeClass="com.plugin.dte.psi.DteTokenType"
+
+    tokens=[
+        space='regexp:\s+'
+        LP = '('
+        RP = ')'
+        THREAD_COMPLETE = "complete_thread"
+        THREAD_CREATE = "create_thread"
+        MAIN_TID = "main"
+        MTX_LOCK = "mutex_lock"
+        MTX_UNLOCK = "mutex_unlock"
+        ID = 'regexp:[a-z][a-zA-Z0-9]*'
+    ]
+}
+
+dteFile ::= <<dteSequenceDescription MAIN_TID>> ( <<dteSequenceDescription ID>> ) * <<eof>>
+
+meta list ::= <<param>> ( <<param>> ) *
+meta dteSequenceDescription ::= <<param>> ':' <<list synchronization_action>>
+
+synchronization_action ::= (THREAD_COMPLETE LP ID RP) | (THREAD_CREATE LP ID RP) | MTX_LOCK | MTX_UNLOCK
