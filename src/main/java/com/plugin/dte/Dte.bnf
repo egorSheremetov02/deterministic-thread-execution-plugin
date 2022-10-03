@@ -25,7 +25,7 @@
     ]
 }
 
-dteFile ::= <<dteSequenceDescription MAIN_TID>> ( <<dteSequenceDescription ID>> ) * <<eof>>
+dteFile ::= <<dteSequenceDescription MAIN_TID>> ( <<dteSequenceDescription (ID | MAIN_TID)>> ) * <<eof>>
 
 meta list ::= <<param>> ( <<param>> ) *
 meta dteSequenceDescription ::= <<param>> ':' <<list synchronization_action>>
