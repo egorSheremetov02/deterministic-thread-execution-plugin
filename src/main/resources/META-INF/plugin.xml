@@ -30,5 +30,8 @@
                 language="Deterministic Thread Execution Language"
                 extensions="dte"
         />
+        <lang.parserDefinition
+                language="Deterministic Thread Execution Language"
+                implementationClass="com.plugin.dte.DteParserDefinition"/>
     </extensions>
 </idea-plugin>

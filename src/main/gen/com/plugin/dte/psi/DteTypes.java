@@ -18,6 +18,7 @@ public interface DteTypes {
   IElementType MTX_LOCK = new DteTokenType("mutex_lock");
   IElementType MTX_UNLOCK = new DteTokenType("mutex_unlock");
   IElementType RP = new DteTokenType(")");
+  IElementType SEMICOLON = new DteTokenType(":");
   IElementType THREAD_COMPLETE = new DteTokenType("complete_thread");
   IElementType THREAD_CREATE = new DteTokenType("create_thread");
 

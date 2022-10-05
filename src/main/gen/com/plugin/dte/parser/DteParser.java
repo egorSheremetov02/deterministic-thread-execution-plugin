@@ -75,13 +75,13 @@ public class DteParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // <<param>> ':' <<list synchronization_action>>
+  // <<param>> SEMICOLON <<list synchronization_action>>
   public static boolean dteSequenceDescription(PsiBuilder b, int l, Parser _param) {
     if (!recursion_guard_(b, l, "dteSequenceDescription")) return false;
     boolean r;
     Marker m = enter_section_(b);
     r = _param.parse(b, l);
-    r = r && consumeToken(b, ":");
+    r = r && consumeToken(b, SEMICOLON);
     r = r && list(b, l + 1, DteParser::synchronization_action);
     exit_section_(b, m, DTE_SEQUENCE_DESCRIPTION, r);
     return r;

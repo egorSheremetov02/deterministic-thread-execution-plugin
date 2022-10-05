@@ -16,6 +16,7 @@
         space='regexp:\s+'
         LP = '('
         RP = ')'
+        SEMICOLON = ':'
         THREAD_COMPLETE = "complete_thread"
         THREAD_CREATE = "create_thread"
         MAIN_TID = "main"
@@ -28,6 +29,6 @@
 dteFile ::= <<dteSequenceDescription MAIN_TID>> ( <<dteSequenceDescription (ID | MAIN_TID)>> ) * <<eof>>
 
 meta list ::= <<param>> ( <<param>> ) *
-meta dteSequenceDescription ::= <<param>> ':' <<list synchronization_action>>
+meta dteSequenceDescription ::= <<param>> SEMICOLON <<list synchronization_action>>
 
 synchronization_action ::= (THREAD_COMPLETE LP ID RP) | (THREAD_CREATE LP ID RP) | MTX_LOCK | MTX_UNLOCK

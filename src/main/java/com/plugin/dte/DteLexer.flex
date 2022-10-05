@@ -2,8 +2,6 @@ package com.plugin.dte;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
-import com.plugin.dte.psi.DteTypes;
-import com.intellij.psi.TokenType;
 
 import static com.intellij.psi.TokenType.BAD_CHARACTER;
 import static com.intellij.psi.TokenType.WHITE_SPACE;
@@ -36,6 +34,7 @@ ID=[a-z][a-zA-Z0-9]*
 
   "("                    { return LP; }
   ")"                    { return RP; }
+  ":"                    { return SEMICOLON; }
   "complete_thread"      { return THREAD_COMPLETE; }
   "create_thread"        { return THREAD_CREATE; }
   "main"                 { return MAIN_TID; }
