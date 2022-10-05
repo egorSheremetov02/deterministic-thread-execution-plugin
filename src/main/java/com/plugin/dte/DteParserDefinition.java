@@ -14,6 +14,7 @@ import com.intellij.psi.tree.TokenSet;
 import com.plugin.dte.parser.DteParser;
 import com.plugin.dte.psi.DteFile;
 import com.plugin.dte.psi.DteTypes;
+
 import org.jetbrains.annotations.NotNull;
 
 public class DteParserDefinition implements ParserDefinition {

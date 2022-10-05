@@ -1,4 +1,4 @@
-package com.plugin.dte;
+package com.plugin.dte.appearance.icons;
 
 import com.intellij.openapi.util.IconLoader;
 import org.jetbrains.annotations.NotNull;

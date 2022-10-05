@@ -4,16 +4,19 @@ import com.intellij.psi.tree.TokenSet;
 
 public class DteTokenSets {
 
-    TokenSet IDENTIFIERS = TokenSet.create(
+    public static final TokenSet IDENTIFIERS = TokenSet.create(
             DteTypes.MAIN_TID,
             DteTypes.ID
     );
 
-    TokenSet KEYWORDS = TokenSet.create(
-            DteTypes.SYNCHRONIZATION_ACTION
+    public static final TokenSet KEYWORDS = TokenSet.create(
+            DteTypes.MTX_UNLOCK,
+            DteTypes.MTX_LOCK,
+            DteTypes.THREAD_CREATE,
+            DteTypes.THREAD_COMPLETE
     );
 
-    TokenSet BRACKETS = TokenSet.create(
+    public static final TokenSet PARENTHESES = TokenSet.create(
             DteTypes.LP,
             DteTypes.RP
     );

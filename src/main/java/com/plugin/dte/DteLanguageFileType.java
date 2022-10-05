@@ -1,8 +1,10 @@
 package com.plugin.dte;
 
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.fileTypes.LanguageFileType;
+
+import com.plugin.dte.appearance.icons.DteIcons;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
