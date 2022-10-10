@@ -116,7 +116,7 @@ public class DteParser implements PsiParser, LightPsiParser {
   }
 
   /* ********************************************************** */
-  // (THREAD_COMPLETE LP ID RP) | (THREAD_CREATE LP ID RP) | MTX_LOCK | MTX_UNLOCK
+  // (THREAD_COMPLETE LP (ID | MAIN_TID) RP) | (THREAD_CREATE LP (ID | MAIN_TID) RP) | MTX_LOCK | MTX_UNLOCK
   public static boolean synchronization_action(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "synchronization_action")) return false;
     boolean r;
@@ -129,23 +129,45 @@ public class DteParser implements PsiParser, LightPsiParser {
     return r;
   }
 
-  // THREAD_COMPLETE LP ID RP
+  // THREAD_COMPLETE LP (ID | MAIN_TID) RP
   private static boolean synchronization_action_0(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "synchronization_action_0")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, THREAD_COMPLETE, LP, ID, RP);
+    r = consumeTokens(b, 0, THREAD_COMPLETE, LP);
+    r = r && synchronization_action_0_2(b, l + 1);
+    r = r && consumeToken(b, RP);
     exit_section_(b, m, null, r);
     return r;
   }
 
-  // THREAD_CREATE LP ID RP
+  // ID | MAIN_TID
+  private static boolean synchronization_action_0_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "synchronization_action_0_2")) return false;
+    boolean r;
+    r = consumeToken(b, ID);
+    if (!r) r = consumeToken(b, MAIN_TID);
+    return r;
+  }
+
+  // THREAD_CREATE LP (ID | MAIN_TID) RP
   private static boolean synchronization_action_1(PsiBuilder b, int l) {
     if (!recursion_guard_(b, l, "synchronization_action_1")) return false;
     boolean r;
     Marker m = enter_section_(b);
-    r = consumeTokens(b, 0, THREAD_CREATE, LP, ID, RP);
+    r = consumeTokens(b, 0, THREAD_CREATE, LP);
+    r = r && synchronization_action_1_2(b, l + 1);
+    r = r && consumeToken(b, RP);
     exit_section_(b, m, null, r);
+    return r;
+  }
+
+  // ID | MAIN_TID
+  private static boolean synchronization_action_1_2(PsiBuilder b, int l) {
+    if (!recursion_guard_(b, l, "synchronization_action_1_2")) return false;
+    boolean r;
+    r = consumeToken(b, ID);
+    if (!r) r = consumeToken(b, MAIN_TID);
     return r;
   }
 

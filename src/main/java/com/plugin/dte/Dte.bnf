@@ -22,7 +22,7 @@
         MAIN_TID = "main"
         MTX_LOCK = "mutex_lock"
         MTX_UNLOCK = "mutex_unlock"
-        ID = 'regexp:[a-z][a-zA-Z0-9]*'
+        ID = 'regexp:[A-Z][a-zA-Z0-9]*'
     ]
 }
 
@@ -31,4 +31,4 @@ dteFile ::= <<dteSequenceDescription MAIN_TID>> ( <<dteSequenceDescription (ID |
 meta list ::= <<param>> ( <<param>> ) *
 meta dteSequenceDescription ::= <<param>> SEMICOLON <<list synchronization_action>>
 
-synchronization_action ::= (THREAD_COMPLETE LP ID RP) | (THREAD_CREATE LP ID RP) | MTX_LOCK | MTX_UNLOCK
+synchronization_action ::= (THREAD_COMPLETE LP (ID | MAIN_TID) RP) | (THREAD_CREATE LP (ID | MAIN_TID) RP) | MTX_LOCK | MTX_UNLOCK

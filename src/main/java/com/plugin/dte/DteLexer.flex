@@ -26,7 +26,7 @@ EOL=\R
 WHITE_SPACE=\s+
 
 SPACE=[ \t\n\x0B\f\r]+
-ID=[a-z][a-zA-Z0-9]*
+ID=[A-Z][a-zA-Z0-9]*
 
 %%
 <YYINITIAL> {
