@@ -6,7 +6,7 @@ import com.intellij.lang.annotation.Annotator;
 import com.intellij.lang.annotation.HighlightSeverity;
 import com.intellij.psi.PsiElement;
 import com.plugin.dte.psi.DteTypes;
-import com.plugin.dte.util.DteCompleteThreadUsageValidityChecker;
+import com.plugin.dte.util.DtePsiUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -26,44 +26,44 @@ public class DteAnnotator implements Annotator {
         if (element.getNode().getElementType() == DteTypes.SYNCHRONIZATION_ACTION) {
             // analyzing only thread_complete synchronization actions
             if (element.getNode().findChildByType(DteTypes.THREAD_COMPLETE) != null) {
-                var threadCompleteElement = element.getNode().findChildByType(DteTypes.THREAD_COMPLETE).getPsi();
+                var threadCompleteElement = Objects.requireNonNull(element.getNode().findChildByType(DteTypes.THREAD_COMPLETE)).getPsi();
                 var isMain = element.getNode().findChildByType(DteTypes.MAIN_TID) != null;
                 // analyze attempt to wait main thread
-                if (isMain && DteCompleteThreadUsageValidityChecker.tryingToCompleteMainThread(threadCompleteElement)) {
+                if (isMain && DtePsiUtil.tryingToCompleteMainThread(threadCompleteElement)) {
                     holder
                             .newAnnotation(
                                     HighlightSeverity.ERROR,
                                     "Can't wait for main thread termination"
                             )
-                            .range(Objects.requireNonNull(DteCompleteThreadUsageValidityChecker.getMainByAction(element)))
+                            .range(Objects.requireNonNull(DtePsiUtil.getMainByAction(element)))
                             .highlightType(ProblemHighlightType.ERROR)
                             // TODO: add quick fix for this error
                             .create();
                     return;
                 }
                 // analyze attempt to wait thread that already was completed
-                if (!isMain && DteCompleteThreadUsageValidityChecker.tryingToCompleteThreadThatAlreadyWasCompleted(threadCompleteElement)) {
-                    String threadName = DteCompleteThreadUsageValidityChecker.getTIDByAction(element).getText();
+                if (!isMain && DtePsiUtil.tryingToCompleteThreadThatAlreadyWasCompleted(threadCompleteElement)) {
+                    String threadName = Objects.requireNonNull(DtePsiUtil.getTIDByAction(element)).getText();
                     holder
                             .newAnnotation(
                                     HighlightSeverity.ERROR,
                                     String.format("Thread %s was already terminated in your code", threadName)
                             )
-                            .range(Objects.requireNonNull(DteCompleteThreadUsageValidityChecker.getTIDByAction(element)))
+                            .range(Objects.requireNonNull(DtePsiUtil.getTIDByAction(element)))
                             .highlightType(ProblemHighlightType.ERROR)
                             // TODO: add quick fix for this error
                             .create();
                     return;
                 }
                 // analyze attempt to wait for thread that was not created yet
-                if (!isMain && DteCompleteThreadUsageValidityChecker.tryingToWaitForNonexistentThread(element)) {
-                    String threadName = DteCompleteThreadUsageValidityChecker.getTIDByAction(element).getText();
+                if (!isMain && DtePsiUtil.tryingToWaitForUncreatedThread(element)) {
+                    String threadName = Objects.requireNonNull(DtePsiUtil.getTIDByAction(element)).getText();
                     holder
                             .newAnnotation(
                                     HighlightSeverity.ERROR,
-                                    String.format("Thread %s was not declared yet", threadName)
+                                    String.format("Thread %s was not created yet", threadName)
                             )
-                            .range(Objects.requireNonNull(DteCompleteThreadUsageValidityChecker.getTIDByAction(element)))
+                            .range(Objects.requireNonNull(DtePsiUtil.getTIDByAction(element)))
                             .highlightType(ProblemHighlightType.ERROR)
                             // TODO: add quick fix for this error
                             .create();

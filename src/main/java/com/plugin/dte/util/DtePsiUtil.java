@@ -4,7 +4,6 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.plugin.dte.psi.DteTokenType;
 import com.plugin.dte.psi.DteTypes;
 
 import java.util.ArrayList;
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class DteCompleteThreadUsageValidityChecker {
+public class DtePsiUtil {
     public static boolean isValid(final PsiElement completeThreadElement) {
         return
                 !tryingToCompleteMainThread(completeThreadElement)
@@ -52,18 +51,25 @@ public class DteCompleteThreadUsageValidityChecker {
         return tid == null ? null : tid.getText();
     }
 
-    public static List<PsiElement> getActionsByTID(final PsiElement dteProgram, final PsiElement threadID, IElementType actionType) {
+    public static PsiElement getActionThread(final PsiElement action) {
+        var curIdElement = action.getNode().findChildByType(DteTypes.ID);
+        if (curIdElement == null) {
+            curIdElement = action.getNode().findChildByType(DteTypes.MAIN_TID);
+        }
+        return Objects.requireNonNull(curIdElement).getPsi();
+    }
+
+    public static List<PsiElement> getActionsByTID(final PsiElement dteProgram, final PsiElement threadID, IElementType ...actionTypes) {
         ArrayList<PsiElement> actions = new ArrayList<>();
         for (var dteSeqDescription : dteProgram.getChildren()) {
             var listElement = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
             if (listElement == null) {
                 continue;
             }
-
             actions.addAll(Arrays.stream(listElement
                     .getChildren(TokenSet.create(DteTypes.SYNCHRONIZATION_ACTION)))
                     .filter(node ->
-                            node.findChildByType(actionType) != null
+                            node.getChildren(TokenSet.create(actionTypes)).length > 0
                                     &&
                             Objects.equals(getStringTIDByAction(node.getPsi()), threadID.getText())
                     )
@@ -77,29 +83,65 @@ public class DteCompleteThreadUsageValidityChecker {
         return getTIDByAction(threadCompleteElement.getParent());
     }
 
+    public static ASTNode getDteSequenceThread(PsiElement dteSeqDescription) {
+        var curIdElement = dteSeqDescription.getNode().findChildByType(DteTypes.ID);
+        if (curIdElement == null) {
+            curIdElement = dteSeqDescription.getNode().findChildByType(DteTypes.MAIN_TID);
+        }
+        return curIdElement;
+    }
+
+    public static IElementType getActionType(PsiElement action) {
+        var actionAST = action.getNode();
+        var actionTypes = actionAST.getChildren(TokenSet.create(DteTypes.THREAD_CREATE, DteTypes.THREAD_COMPLETE, DteTypes.MTX_UNLOCK, DteTypes.MTX_LOCK));
+        assert actionTypes.length == 1;
+        return actionTypes[0].getElementType();
+    }
+
     public static boolean tryingToWaitForNonexistentThread(PsiElement completeAction) {
-        PsiElement idElement = getTIDByAction(completeAction);
+        var idElement = getTIDByAction(completeAction);
         if (idElement == null) {
             return false;
         }
-        System.out.println(idElement.getText());
         for (var dteSeqDescription : completeAction.getContainingFile().getChildren()) {
-            var listElement = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
-            var curIdElement = dteSeqDescription.getNode().findChildByType(DteTypes.ID);
-            if (listElement == null || curIdElement == null) {
+            var listElementAST = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
+            if (listElementAST == null) {
                 continue;
             }
+            var curIdElementAST = getDteSequenceThread(dteSeqDescription);
+            if (curIdElementAST == null) {
+                continue;
+            }
+            var curIdElement = curIdElementAST.getPsi();
+            var listElement = listElementAST.getPsi();
             if (curIdElement.getText().equals(idElement.getText())) {
                 return false;
             }
             var optionalAction = Arrays
-                    .stream(listElement.getChildren(TokenSet.create(DteTypes.SYNCHRONIZATION_ACTION))).filter(node ->
-                        node == completeAction
-                    ).findAny();
+                    .stream(listElement.getNode().getChildren(TokenSet.create(DteTypes.SYNCHRONIZATION_ACTION)))
+                    .map(ASTNode::getPsi)
+                    .filter(node -> node == completeAction)
+                    .findAny();
             if (optionalAction.isPresent()) {
                 return true;
             }
         }
         return false;
+    }
+    public static boolean tryingToWaitForUncreatedThread(PsiElement completeAction) {
+        var actions = getActionsByTID(
+                completeAction.getContainingFile(),
+                getActionThread(completeAction),
+                DteTypes.THREAD_COMPLETE, DteTypes.THREAD_CREATE);
+        for (var action : actions) {
+            var actionType = getActionType(action);
+            if (actionType == DteTypes.THREAD_CREATE) {
+                return false;
+            }
+            if (action == completeAction) {
+                break;
+            }
+        }
+        return true;
     }
 }
