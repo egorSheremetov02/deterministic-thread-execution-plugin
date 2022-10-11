@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 public class DtePsiUtil {
     public static boolean isValid(final PsiElement completeThreadElement) {
         return
@@ -56,7 +58,7 @@ public class DtePsiUtil {
         if (curIdElement == null) {
             curIdElement = action.getNode().findChildByType(DteTypes.MAIN_TID);
         }
-        return Objects.requireNonNull(curIdElement).getPsi();
+        return requireNonNull(curIdElement).getPsi();
     }
 
     public static List<PsiElement> getActionsByTID(final PsiElement dteProgram, final PsiElement threadID, IElementType ...actionTypes) {
@@ -98,12 +100,48 @@ public class DtePsiUtil {
         return actionTypes[0].getElementType();
     }
 
-    public static boolean tryingToWaitForNonexistentThread(PsiElement completeAction) {
-        var idElement = getTIDByAction(completeAction);
-        if (idElement == null) {
-            return false;
+    public static boolean tryingToWaitForUncreatedThread(PsiElement completeAction) {
+        var actions = getActionsByTID(
+                completeAction.getContainingFile(),
+                getActionThread(completeAction),
+                DteTypes.THREAD_COMPLETE, DteTypes.THREAD_CREATE);
+        for (var action : actions) {
+            if (action == completeAction) {
+                break;
+            }
+            var actionType = getActionType(action);
+            if (actionType == DteTypes.THREAD_CREATE) {
+                return false;
+            }
         }
-        for (var dteSeqDescription : completeAction.getContainingFile().getChildren()) {
+        return true;
+    }
+
+    public static boolean tryingToCreateThreadWithDuplicateName(PsiElement createAction) {
+        System.err.println("in tryingToCreateThreadWithDuplicateName");
+        var actions = getActionsByTID(
+                createAction.getContainingFile(),
+                getTIDByAction(createAction),
+                DteTypes.THREAD_CREATE);
+        System.err.println("actions size is " + actions.size() + " for thread " + getTIDByAction(createAction).getText());
+        for (var action : actions) {
+            if (action == createAction) {
+                break;
+            }
+            if (
+                    Objects.equals(
+                        requireNonNull(getTIDByAction(action)).getText(),
+                        requireNonNull(getTIDByAction(createAction)).getText()
+                    )
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean tryingToUseUndefinedTID(PsiElement idElement) {
+        for (var dteSeqDescription : idElement.getContainingFile().getChildren()) {
             var listElementAST = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
             if (listElementAST == null) {
                 continue;
@@ -114,32 +152,19 @@ public class DtePsiUtil {
             }
             var curIdElement = curIdElementAST.getPsi();
             var listElement = listElementAST.getPsi();
-            if (curIdElement.getText().equals(idElement.getText())) {
-                return false;
+            if (idElement == curIdElement) {
+                break;
             }
             var optionalAction = Arrays
                     .stream(listElement.getNode().getChildren(TokenSet.create(DteTypes.SYNCHRONIZATION_ACTION)))
                     .map(ASTNode::getPsi)
-                    .filter(node -> node == completeAction)
+                    .filter(action ->
+                            getActionType(action) == DteTypes.THREAD_CREATE
+                                    &&
+                            Objects.equals(requireNonNull(getTIDByAction(action)).getText(), idElement.getText()))
                     .findAny();
             if (optionalAction.isPresent()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    public static boolean tryingToWaitForUncreatedThread(PsiElement completeAction) {
-        var actions = getActionsByTID(
-                completeAction.getContainingFile(),
-                getActionThread(completeAction),
-                DteTypes.THREAD_COMPLETE, DteTypes.THREAD_CREATE);
-        for (var action : actions) {
-            var actionType = getActionType(action);
-            if (actionType == DteTypes.THREAD_CREATE) {
                 return false;
-            }
-            if (action == completeAction) {
-                break;
             }
         }
         return true;
