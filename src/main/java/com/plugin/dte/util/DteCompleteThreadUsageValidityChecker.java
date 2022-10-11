@@ -4,6 +4,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
+import com.plugin.dte.psi.DteTokenType;
 import com.plugin.dte.psi.DteTypes;
 
 import java.util.ArrayList;
@@ -54,10 +55,6 @@ public class DteCompleteThreadUsageValidityChecker {
     public static List<PsiElement> getActionsByTID(final PsiElement dteProgram, final PsiElement threadID, IElementType actionType) {
         ArrayList<PsiElement> actions = new ArrayList<>();
         for (var dteSeqDescription : dteProgram.getChildren()) {
-
-//            System.out.println(dteSeqDescription.getNode().findChildByType(DteTypes.LIST));
-//            Arrays.stream(dteSeqDescription.getChildren()).forEach(e -> System.err.println(e.getNode().getElementType().toString() + e.getNode().getElementType().equals(DteTypes.LIST)));
-
             var listElement = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
             if (listElement == null) {
                 continue;
@@ -78,5 +75,31 @@ public class DteCompleteThreadUsageValidityChecker {
 
     public static PsiElement getTIDByThreadCompleteElement(PsiElement threadCompleteElement) {
         return getTIDByAction(threadCompleteElement.getParent());
+    }
+
+    public static boolean tryingToWaitForNonexistentThread(PsiElement completeAction) {
+        PsiElement idElement = getTIDByAction(completeAction);
+        if (idElement == null) {
+            return false;
+        }
+        System.out.println(idElement.getText());
+        for (var dteSeqDescription : completeAction.getContainingFile().getChildren()) {
+            var listElement = dteSeqDescription.getNode().findChildByType(DteTypes.LIST);
+            var curIdElement = dteSeqDescription.getNode().findChildByType(DteTypes.ID);
+            if (listElement == null || curIdElement == null) {
+                continue;
+            }
+            if (curIdElement.getText().equals(idElement.getText())) {
+                return false;
+            }
+            var optionalAction = Arrays
+                    .stream(listElement.getChildren(TokenSet.create(DteTypes.SYNCHRONIZATION_ACTION))).filter(node ->
+                        node == completeAction
+                    ).findAny();
+            if (optionalAction.isPresent()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -24,9 +24,11 @@ public class DteAnnotator implements Annotator {
         }
 
         if (element.getNode().getElementType() == DteTypes.SYNCHRONIZATION_ACTION) {
+            // analyzing only thread_complete synchronization actions
             if (element.getNode().findChildByType(DteTypes.THREAD_COMPLETE) != null) {
                 var threadCompleteElement = element.getNode().findChildByType(DteTypes.THREAD_COMPLETE).getPsi();
                 var isMain = element.getNode().findChildByType(DteTypes.MAIN_TID) != null;
+                // analyze attempt to wait main thread
                 if (isMain && DteCompleteThreadUsageValidityChecker.tryingToCompleteMainThread(threadCompleteElement)) {
                     holder
                             .newAnnotation(
@@ -39,12 +41,27 @@ public class DteAnnotator implements Annotator {
                             .create();
                     return;
                 }
+                // analyze attempt to wait thread that already was completed
                 if (!isMain && DteCompleteThreadUsageValidityChecker.tryingToCompleteThreadThatAlreadyWasCompleted(threadCompleteElement)) {
                     String threadName = DteCompleteThreadUsageValidityChecker.getTIDByAction(element).getText();
                     holder
                             .newAnnotation(
                                     HighlightSeverity.ERROR,
                                     String.format("Thread %s was already terminated in your code", threadName)
+                            )
+                            .range(Objects.requireNonNull(DteCompleteThreadUsageValidityChecker.getTIDByAction(element)))
+                            .highlightType(ProblemHighlightType.ERROR)
+                            // TODO: add quick fix for this error
+                            .create();
+                    return;
+                }
+                // analyze attempt to wait for thread that was not created yet
+                if (!isMain && DteCompleteThreadUsageValidityChecker.tryingToWaitForNonexistentThread(element)) {
+                    String threadName = DteCompleteThreadUsageValidityChecker.getTIDByAction(element).getText();
+                    holder
+                            .newAnnotation(
+                                    HighlightSeverity.ERROR,
+                                    String.format("Thread %s was not declared yet", threadName)
                             )
                             .range(Objects.requireNonNull(DteCompleteThreadUsageValidityChecker.getTIDByAction(element)))
                             .highlightType(ProblemHighlightType.ERROR)
