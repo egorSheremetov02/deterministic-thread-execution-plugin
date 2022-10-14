@@ -43,6 +43,7 @@ public class DteAnnotator implements Annotator {
                         // TODO: add quick fix for this error
                         .create();
             }
+            return;
         }
 
         if (element.getNode().getElementType() == DteTypes.SYNCHRONIZATION_ACTION) {

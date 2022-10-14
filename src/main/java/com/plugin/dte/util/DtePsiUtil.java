@@ -118,12 +118,10 @@ public class DtePsiUtil {
     }
 
     public static boolean tryingToCreateThreadWithDuplicateName(PsiElement createAction) {
-        System.err.println("in tryingToCreateThreadWithDuplicateName");
         var actions = getActionsByTID(
                 createAction.getContainingFile(),
                 getTIDByAction(createAction),
                 DteTypes.THREAD_CREATE);
-        System.err.println("actions size is " + actions.size() + " for thread " + getTIDByAction(createAction).getText());
         for (var action : actions) {
             if (action == createAction) {
                 break;

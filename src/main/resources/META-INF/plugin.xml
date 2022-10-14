@@ -38,5 +38,8 @@
         <annotator
                 language="Deterministic Thread Execution Language"
                 implementationClass="com.plugin.dte.appearance.highlighting.DteAnnotator"/>
+        <codeInsight.lineMarkerProvider
+                language="Deterministic Thread Execution Language"
+                implementationClass="com.plugin.dte.appearance.markers.DteSynchronizationActionMarkerProvider"/>
     </extensions>
 </idea-plugin>
